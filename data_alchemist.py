@@ -68,11 +68,13 @@ async def handle_numbers(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     start_dummy_server()  
     loop = asyncio.get_event_loop()
+    keep_alive_task = loop.create_task(keep_alive_forever())
     loop.create_task(keep_alive_forever())  # se vuoi anche il ping, opzionale
 
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_choice))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_numbers))
+    app.add_shutdown_handler(lambda _: keep_alive_task.cancel())
     app.run_polling()
 
