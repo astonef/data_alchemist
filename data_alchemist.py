@@ -16,6 +16,8 @@ from telegram.ext import (
 
 from funzioni_dati.media_aritmetica import calc_media_e_salva
 from alive import keep_alive_forever
+from keep_alive_server import start_dummy_server 
+
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 user_state = {}
@@ -64,11 +66,13 @@ async def handle_numbers(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # 🚀 Start dummy server and bot
 if __name__ == "__main__":
+    start_dummy_server()  
     loop = asyncio.get_event_loop()
-    loop.create_task(keep_alive_forever())  # 👈 ping ogni 10 minuti a Telegram
+    loop.create_task(keep_alive_forever())  # se vuoi anche il ping, opzionale
 
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_choice))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_numbers))
     app.run_polling()
+
