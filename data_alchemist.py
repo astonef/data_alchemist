@@ -1,38 +1,21 @@
 import os
 import tempfile
 import asyncio
-from threading import Thread
-from http.server import BaseHTTPRequestHandler, HTTPServer
-
 from dotenv import load_dotenv
-load_dotenv()
-
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import (
     ApplicationBuilder, CommandHandler,
     CallbackQueryHandler, MessageHandler,
     ContextTypes, filters
 )
+from aiohttp import web
 
 from funzioni_dati.media_aritmetica import calc_media_e_salva
-from alive import keep_alive_forever
-from keep_alive_server import start_dummy_server 
 
+load_dotenv()
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 user_state = {}
-
-# 🌐 Dummy HTTP server for Render Web Service
-class DummyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Bot is running.")
-
-def run_dummy_server():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(("", port), DummyServer)
-    server.serve_forever()
 
 # 🤖 Bot handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,17 +47,31 @@ async def handle_numbers(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"Errore: {str(e)}")
 
-# 🚀 Start dummy server and bot
-if __name__ == "__main__":
-    start_dummy_server()  
-    loop = asyncio.get_event_loop()
-    keep_alive_task = loop.create_task(keep_alive_forever())
-    loop.create_task(keep_alive_forever())  # se vuoi anche il ping, opzionale
+# 🌐 Web server per Render
+async def handle_ping(request):
+    return web.Response(text="✅ Bot attivo")
 
+# 🚀 Avvio bot e server aiohttp
+async def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_choice))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_numbers))
-    app.add_shutdown_handler(lambda _: keep_alive_task.cancel())
-    app.run_polling()
 
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+
+    web_app = web.Application()
+    web_app.router.add_get("/", handle_ping)
+
+    runner = web.AppRunner(web_app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
+    await site.start()
+
+    await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    asyncio.run(main())
