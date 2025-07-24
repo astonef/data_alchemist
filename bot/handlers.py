@@ -1,7 +1,4 @@
 # bot/handlers.py
-
-import os
-import tempfile
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ContextTypes
