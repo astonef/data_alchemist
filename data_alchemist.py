@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 from aiohttp import web
 
-from funzioni_dati.media_aritmetica import calc_media_e_salva
+from funzioni_dati.media_aritmetica import calc_media
 from bot.handlers import start, handle_choice, handle_numbers
 
 load_dotenv()
