@@ -7,9 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "hash-test": "node src/app/test/hash.js"
-  },
+    "lint": "next lint"  
+            },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@next-auth/mongodb-adapter": "^1.1.3",
